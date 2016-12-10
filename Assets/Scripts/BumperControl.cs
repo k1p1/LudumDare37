@@ -10,7 +10,7 @@ public class BumperControl : MonoBehaviour
     public static event Action<BumperControl> PlayerDead;
     public float DashPowerup { get { return _dashTimer / DashCooldown ; } }
     public bool CanDash { get { return DashCooldown - _dashTimer < 0.1f; } }
-
+    private bool isGrounded { get { return Mathf.Abs(_rigidbody.velocity.y) < 0.01f || _rigidbody.velocity.magnitude > ThresholdVelocity; } }
     [SerializeField]
     private float MoveForce;
     [SerializeField]
@@ -19,6 +19,12 @@ public class BumperControl : MonoBehaviour
     private float DashForce;
     [SerializeField]
     private float DashCooldown;
+    [SerializeField]
+    private float GroundedDrag;
+    [SerializeField]
+    private float FallingDrag;
+    [SerializeField]
+    private float ThresholdVelocity;
 
     private Vector3 _force = new Vector2();
     private Rigidbody _rigidbody;
@@ -37,9 +43,9 @@ public class BumperControl : MonoBehaviour
 	// Update is called once per frame
 	private void Update ()
     {
-        _force = new Vector3(Input.GetAxis("Vertical"), 0, Input.GetAxis("Horizontal"));
         _dashTimer = Mathf.Min(_dashTimer + Time.unscaledDeltaTime, DashCooldown);
-        if (Input.GetKeyDown(KeyCode.Space) && CanDash )
+        _force = new Vector3(Input.GetAxis("Vertical"), 0, Input.GetAxis("Horizontal"));
+        if (Input.GetKeyDown(KeyCode.Space) && CanDash)
         {
             Dash();
         }
@@ -53,8 +59,16 @@ public class BumperControl : MonoBehaviour
 
     private void FixedUpdate()
     {
-        _rigidbody.AddForce(_force * MoveForce * (_dash ? DashForce : 1.0f), ForceMode.Force);
-        _dash = false;
+        if (isGrounded)
+        {
+            _rigidbody.AddForce(_force * MoveForce * (_dash ? DashForce : 1.0f), ForceMode.Force);
+            _dash = false;
+            _rigidbody.drag = GroundedDrag;
+        }
+        else
+        {
+            _rigidbody.drag = FallingDrag;
+        }
     }
 
     private void OnCollisionEnter(Collision collision)

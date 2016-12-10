@@ -7,14 +7,14 @@ public class CooldownUI : MonoBehaviour
 {
     [SerializeField]
     private Image CooldownImage;
-    private BumperControl player;
+    private PlayerControl player;
 	// Use this for initialization
 	void Awake ()
     {
        // BumperControl.PlayerSpawned += BumperSpawned;
 	}
 
-    private void BumperSpawned(BumperControl bumper)
+    private void PlayerSpawned(PlayerControl bumper)
     {
         player = bumper;
     }

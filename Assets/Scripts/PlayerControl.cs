@@ -3,10 +3,18 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BumperControl : MonoBehaviour
+public class PlayerControl : Photon.PunBehaviour
 {
+	#region Network
+	private static GameObject localPlayerInstance;
 
-    public static event Action<BumperControl> PlayerSpawned;
+	public static GameObject LocalPlayerInstance
+	{
+		get { return localPlayerInstance; }
+	}
+	#endregion
+
+    public static event Action<PlayerControl> PlayerSpawned;
     public float DashPowerup { get { return _dashTimer / DashCooldown ; } }
     public bool CanDash { get { return Mathf.Approximately(_dashTimer, DashCooldown); } }
 
@@ -24,6 +32,14 @@ public class BumperControl : MonoBehaviour
     private float _dashTimer;
     private bool _dash = false;
 
+	void Awake()
+	{
+		if (photonView.isMine)
+		{
+			localPlayerInstance = gameObject;
+		}
+	}
+
     private void Start ()
     {
         _rigidbody = GetComponent<Rigidbody>();
@@ -36,12 +52,21 @@ public class BumperControl : MonoBehaviour
 	// Update is called once per frame
 	private void Update ()
     {
-        _force = new Vector3(Input.GetAxis("Vertical"), 0, Input.GetAxis("Horizontal"));
-        _dashTimer = Mathf.Max(_dashTimer + Time.unscaledDeltaTime, DashCooldown);
-        if (Input.GetKeyDown(KeyCode.Space) )
-        {
-            Dash();
-        }
+		if (photonView.isMine)
+		{
+			this.ProcessInputs();
+		}
+        
+	}
+
+	private void ProcessInputs()
+	{
+		_force = new Vector3(-Input.GetAxis("Vertical"), 0, Input.GetAxis("Horizontal"));
+		_dashTimer = Mathf.Max(_dashTimer + Time.unscaledDeltaTime, DashCooldown);
+		if (Input.GetKeyDown(KeyCode.Space) )
+		{
+			Dash();
+		}
 	}
 
     private void Dash()

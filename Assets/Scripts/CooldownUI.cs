@@ -11,8 +11,19 @@ public class CooldownUI : MonoBehaviour
 	// Use this for initialization
 	void Awake ()
     {
-       // BumperControl.PlayerSpawned += BumperSpawned;
-	}
+       BumperControl.PlayerSpawned += BumperSpawned;
+       BumperControl.PlayerDead += BumperDead;
+    }
+
+    private void BumperDead(BumperControl obj)
+    {
+        player = null;
+    }
+
+    private void BumperControl_PlayerSpawned(BumperControl obj)
+    {
+        throw new System.NotImplementedException();
+    }
 
     private void BumperSpawned(BumperControl bumper)
     {

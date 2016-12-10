@@ -7,24 +7,13 @@ public class CooldownUI : MonoBehaviour
 {
     [SerializeField]
     private Image CooldownImage;
-    private PlayerControl player;
-	// Use this for initialization
-	void Awake ()
-    {
-       // BumperControl.PlayerSpawned += BumperSpawned;
-	}
-
-    private void PlayerSpawned(PlayerControl bumper)
-    {
-        player = bumper;
-    }
 
     // Update is called once per frame
     void Update ()
     {
-        if (player != null)
+        if (PlayerControl.LocalPlayerInstance != null)
         {
-            CooldownImage.transform.localScale = new Vector3(player.DashPowerup, 1, 1);
+            CooldownImage.transform.localScale = new Vector3(PlayerControl.LocalPlayerInstance.DashPowerup, 1, 1);
         }
     }
 }

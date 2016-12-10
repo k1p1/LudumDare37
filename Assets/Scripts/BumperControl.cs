@@ -7,8 +7,9 @@ public class BumperControl : MonoBehaviour
 {
 
     public static event Action<BumperControl> PlayerSpawned;
+    public static event Action<BumperControl> PlayerDead;
     public float DashPowerup { get { return _dashTimer / DashCooldown ; } }
-    public bool CanDash { get { return Mathf.Approximately(_dashTimer, DashCooldown); } }
+    public bool CanDash { get { return DashCooldown - _dashTimer < 0.1f; } }
 
     [SerializeField]
     private float MoveForce;
@@ -37,8 +38,8 @@ public class BumperControl : MonoBehaviour
 	private void Update ()
     {
         _force = new Vector3(Input.GetAxis("Vertical"), 0, Input.GetAxis("Horizontal"));
-        _dashTimer = Mathf.Max(_dashTimer + Time.unscaledDeltaTime, DashCooldown);
-        if (Input.GetKeyDown(KeyCode.Space) )
+        _dashTimer = Mathf.Min(_dashTimer + Time.unscaledDeltaTime, DashCooldown);
+        if (Input.GetKeyDown(KeyCode.Space) && CanDash )
         {
             Dash();
         }
@@ -63,12 +64,12 @@ public class BumperControl : MonoBehaviour
             collision.collider.GetComponent<Rigidbody>().AddForceAtPosition(-collision.contacts[0].normal * HitForce, collision.contacts[0].point, ForceMode.Impulse);
         }
     }
-    //private void OnCollisionExit(Collision collision)
-    //{
-    //    if (collision.collider.CompareTag("Ground"))
-    //    {
-    //        _rigidbody.drag = 0;
-    //        _rigidbody.mass = 20;
-    //    }
-    //}
+
+    private void OnDestroy()
+    {
+        if (PlayerDead != null)
+        {
+            PlayerDead(this);
+        }
+    }
 }

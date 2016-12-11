@@ -13,10 +13,7 @@ public class PlayerControl : Photon.PunBehaviour
 		get { return localPlayerInstance; }
 	}
 	#endregion
-
-    public static event Action<PlayerControl> PlayerSpawned;
-    public static event Action<PlayerControl> PlayerDead;
-
+ 
     public float DashPowerup { get { return _dashTimer / DashCooldown ; } }
     public bool CanDash { get { return DashCooldown - _dashTimer < 0.1f; } }
     private bool isGrounded { get { return Mathf.Abs(_rigidbody.velocity.y) < 0.01f || _rigidbody.velocity.magnitude > ThresholdVelocity; } }
@@ -98,15 +95,20 @@ public class PlayerControl : Photon.PunBehaviour
         }
     }
 
+    private void OnTriggerEnter(Collider collider)
+    {
+        Vector3 hitForce = (collider.transform.position - transform.position).normalized * _rigidbody.velocity.magnitude * HitForce;
+        if (collider.CompareTag(gameObject.tag) && photonView.isMine)
+        {
+            collider.gameObject.GetComponent<PlayerControl>().photonView.RPC("RpcTakeHit", PhotonTargets.All, gameObject.transform.position, hitForce);
+        }
+    }
+
     private void OnCollisionEnter(Collision collision)
     {
-        Vector3 hitForce = (collision.collider.transform.position - transform.position).normalized * HitForce;
+        Vector3 hitForce = (collision.collider.transform.position - transform.position).normalized * _rigidbody.velocity.magnitude;
         Vector3 hitPos = collision.contacts[0].point;
-        if (collision.collider.CompareTag(gameObject.tag) && photonView.isMine)
-        {
-            collision.gameObject.GetComponent<PlayerControl>().photonView.RPC("RpcTakeHit", PhotonTargets.All, hitPos, hitForce);
-        }
-        else if (collision.collider.CompareTag("Obsticle") && PhotonNetwork.isMasterClient)
+        if (collision.collider.CompareTag("Obsticle") && PhotonNetwork.isMasterClient)
         {
             collision.gameObject.GetComponent<Rigidbody>().AddForceAtPosition(hitForce, hitPos, ForceMode.Impulse);
         }
@@ -114,11 +116,10 @@ public class PlayerControl : Photon.PunBehaviour
 
     [PunRPC]
     public void RpcTakeHit(Vector3 position, Vector3 force)
-    {
-        Debug.Log(force);
+    {        
         if (photonView.isMine)
         {
-            _rigidbody.AddForceAtPosition(force, position, ForceMode.Impulse);
+            _rigidbody.AddForceAtPosition(force, position, ForceMode.Acceleration);
         }
     }
 

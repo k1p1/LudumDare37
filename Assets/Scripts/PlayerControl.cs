@@ -44,6 +44,15 @@ public class PlayerControl : Photon.PunBehaviour
     private float _dashTimer;
     private bool _dash = false;
 
+	private bool isDead = false;
+
+	private float freezeTimer = 1.0f;
+
+	public bool IsDead
+	{
+		get { return isDead; }
+	}
+
 	void Awake()
 	{
 		if (photonView.isMine)
@@ -51,21 +60,21 @@ public class PlayerControl : Photon.PunBehaviour
             GetComponent<Renderer>().material.color = MyColor;
 			localPlayerInstance = this;
 		}
-	}
 
-    private void Start ()
-    {
-        _rigidbody = GetComponent<Rigidbody>();
-    }
+		_rigidbody = GetComponent<Rigidbody>();
+	}
 	
 	// Update is called once per frame
 	private void Update ()
     {
-		if (photonView.isMine)
+		if (freezeTimer > 0.0f)
+		{
+			freezeTimer -= Time.deltaTime;
+		}
+		else if (photonView.isMine && !isDead)
 		{
 			this.ProcessInputs();
 		}
-        
 	}
 
 	private void ProcessInputs()
@@ -112,6 +121,11 @@ public class PlayerControl : Photon.PunBehaviour
         }
     }
 
+	public void Die()
+	{
+		isDead = true;
+	}
+
     [PunRPC]
     public void RpcTakeHit(Vector3 position, Vector3 force)
     {
@@ -122,4 +136,20 @@ public class PlayerControl : Photon.PunBehaviour
         }
     }
 
+	[PunRPC]
+	public void RpcSpawnPlayer(Vector3 position, float freezeTime)
+	{
+		Debug.Log(position);
+		isDead = false;
+
+		if (photonView.isMine)
+		{
+			transform.position = position;
+			_rigidbody.velocity = Vector3.zero;
+			_rigidbody.angularVelocity = Vector3.zero;
+			_force = Vector2.zero;
+
+			freezeTimer = freezeTime;
+		}
+	}
 }

@@ -20,6 +20,8 @@ public class PlayerControl : Photon.PunBehaviour
     { get { return Mathf.Abs(_rigidbody.velocity.y) < 0.01f || _rigidbody.velocity.magnitude > ThresholdVelocity; } }
 
     [SerializeField]
+    private GameObject Explosion;
+    [SerializeField]
     private GameObject NameCanvas;
     [SerializeField]
     private Color TheirColor;
@@ -85,7 +87,9 @@ public class PlayerControl : Photon.PunBehaviour
     private void Dash()
     {
         _dashTimer = 0;
-        StartCoroutine(DashCoroutine());
+        PhotonNetwork.Instantiate(Explosion.name, transform.position, Quaternion.identity, 0, new object[] { photonView.ownerId, _force });
+
+        //StartCoroutine(DashCoroutine());
     }
 
     private void FixedUpdate()
@@ -102,6 +106,7 @@ public class PlayerControl : Photon.PunBehaviour
         {
             _rigidbody.drag = FallingDrag;
         }
+        
     }
 
     private IEnumerator DashCoroutine()
@@ -120,12 +125,8 @@ public class PlayerControl : Photon.PunBehaviour
         transform.localScale = Vector3.one * 3;
         _dash = false;
     }
-    private void OnTriggerEnter(Collider collider)
+    private void OnTriggerStay(Collider collider)
     {
-        
-        
-        
-        
         if (collider.CompareTag(gameObject.tag) && photonView.isMine)
         {
             Rigidbody otherBody = collider.GetComponent<Rigidbody>();

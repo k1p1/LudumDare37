@@ -20,6 +20,8 @@ public class PlayerControl : Photon.PunBehaviour
     { get { return Mathf.Abs(_rigidbody.velocity.y) < 0.01f || _rigidbody.velocity.magnitude > ThresholdVelocity; } }
 
     [SerializeField]
+    private GameObject NameCanvas;
+    [SerializeField]
     private Color TheirColor;
     [SerializeField]
     private Color MyColor;
@@ -47,16 +49,18 @@ public class PlayerControl : Photon.PunBehaviour
 
 	void Awake()
 	{
-		if (photonView.isMine)
+        _rigidbody = GetComponent<Rigidbody>();
+        if (photonView.isMine)
 		{
             GetComponent<Renderer>().material.color = MyColor;
 			localPlayerInstance = this;
 		}
     }
     private void Start ()
-    {
-        _rigidbody = GetComponent<Rigidbody>();
-
+    {        
+        var canvas = Instantiate(NameCanvas, transform.position, Quaternion.identity).GetComponent<NameCanvas>();
+        canvas.Target = gameObject;
+        canvas.PlayerName = photonView.owner.customProperties[GameManager.NameKey].ToString();
     }
 
     // Update is called once per frame

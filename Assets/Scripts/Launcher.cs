@@ -9,9 +9,11 @@ public class Launcher : Photon.PunBehaviour
 	[SerializeField]
 	byte maxPlayers = 20;
 
+	LauncherUI ui;
+
 	void Start ()
 	{
-
+		ui = GetComponent<LauncherUI>();
         //todo get name from UI
         PlayerPrefs.SetString(GameManager.NameKey, "Best Name Ever! ");
 
@@ -27,6 +29,9 @@ public class Launcher : Photon.PunBehaviour
 	public override void OnConnectedToMaster()
 	{
 		isConnectedToMaster = true;
+
+		ui.PlayButtonInteractable = true;
+		ui.PlayButtonText = "Play";
 	}
 		
 	public override void OnDisconnectedFromPhoton()

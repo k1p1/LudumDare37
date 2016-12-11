@@ -21,6 +21,10 @@ public class PlayerControl : Photon.PunBehaviour
     public bool CanDash { get { return DashCooldown - _dashTimer < 0.1f; } }
     private bool isGrounded { get { return Mathf.Abs(_rigidbody.velocity.y) < 0.01f || _rigidbody.velocity.magnitude > ThresholdVelocity; } }
     [SerializeField]
+    private Color TheirColor;
+    [SerializeField]
+    private Color MyColor;
+    [SerializeField]
     private float MoveForce;
     [SerializeField]
     private float HitForce;
@@ -42,8 +46,9 @@ public class PlayerControl : Photon.PunBehaviour
 
 	void Awake()
 	{
-		//if (photonView.isMine)
+		if (photonView.isMine)
 		{
+            GetComponent<Renderer>().material.color = MyColor;
 			localPlayerInstance = this;
 		}
 	}
@@ -56,7 +61,7 @@ public class PlayerControl : Photon.PunBehaviour
 	// Update is called once per frame
 	private void Update ()
     {
-		//if (photonView.isMine)
+		if (photonView.isMine)
 		{
 			this.ProcessInputs();
 		}
@@ -95,9 +100,26 @@ public class PlayerControl : Photon.PunBehaviour
 
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.collider.CompareTag(gameObject.tag))
+        Vector3 hitForce = (collision.collider.transform.position - transform.position).normalized * HitForce;
+        Vector3 hitPos = collision.contacts[0].point;
+        if (collision.collider.CompareTag(gameObject.tag) && photonView.isMine)
         {
-            collision.collider.GetComponent<Rigidbody>().AddForceAtPosition(-collision.contacts[0].normal * HitForce, collision.contacts[0].point, ForceMode.Impulse);
+            collision.gameObject.GetComponent<PlayerControl>().photonView.RPC("RpcTakeHit", PhotonTargets.All, hitPos, hitForce);
+        }
+        else if (collision.collider.CompareTag("Obsticle") && PhotonNetwork.isMasterClient)
+        {
+            collision.gameObject.GetComponent<Rigidbody>().AddForceAtPosition(hitForce, hitPos, ForceMode.Impulse);
         }
     }
+
+    [PunRPC]
+    public void RpcTakeHit(Vector3 position, Vector3 force)
+    {
+        Debug.Log(force);
+        if (photonView.isMine)
+        {
+            _rigidbody.AddForceAtPosition(force, position, ForceMode.Impulse);
+        }
+    }
+
 }

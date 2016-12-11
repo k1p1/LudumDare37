@@ -9,8 +9,10 @@ public class GameManager : Photon.MonoBehaviour
 
 	[SerializeField]
 	private GameObject playerPrefab;
+    [SerializeField]
+    private Spawner spawner;
 
-	void Start () 
+    void Start () 
 	{
 		Instance = this;
 
@@ -26,7 +28,7 @@ public class GameManager : Photon.MonoBehaviour
 			Debug.Log("We are Instantiating LocalPlayer from "+SceneManagerHelper.ActiveSceneName);
 
 			// we're in a room. spawn a character for the local player. it gets synced by using PhotonNetwork.Instantiate
-			PhotonNetwork.Instantiate(this.playerPrefab.name, new Vector3(0f,5f,0f), Quaternion.identity, 0);
+			PhotonNetwork.Instantiate(this.playerPrefab.name, spawner.GetSpawnPosition(), Quaternion.identity, 0);
 		}else{
 
 			Debug.Log("Ignoring scene load for "+ SceneManagerHelper.ActiveSceneName);

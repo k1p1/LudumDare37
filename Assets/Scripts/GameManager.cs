@@ -14,7 +14,8 @@ public class GameManager : Photon.MonoBehaviour
 	[SerializeField]
 	private GameObject playerPrefab;
 
-	void Start () 
+
+    void Start () 
 	{
 		Instance = this;
 

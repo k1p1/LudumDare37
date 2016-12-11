@@ -16,7 +16,9 @@ public class PlayerControl : Photon.PunBehaviour
  
     public float DashPowerup { get { return _dashTimer / DashCooldown ; } }
     public bool CanDash { get { return DashCooldown - _dashTimer < 0.1f; } }
-    private bool isGrounded { get { return Mathf.Abs(_rigidbody.velocity.y) < 0.01f || _rigidbody.velocity.magnitude > ThresholdVelocity; } }
+    private bool isGrounded
+    { get { return Mathf.Abs(_rigidbody.velocity.y) < 0.01f || _rigidbody.velocity.magnitude > ThresholdVelocity; } }
+
     [SerializeField]
     private Color TheirColor;
     [SerializeField]
@@ -35,6 +37,8 @@ public class PlayerControl : Photon.PunBehaviour
     private float FallingDrag;
     [SerializeField]
     private float ThresholdVelocity;
+    [SerializeField]
+    private float DashTime;
 
     private Vector3 _force = new Vector2();
     private Rigidbody _rigidbody;
@@ -48,25 +52,24 @@ public class PlayerControl : Photon.PunBehaviour
             GetComponent<Renderer>().material.color = MyColor;
 			localPlayerInstance = this;
 		}
-	}
-
+    }
     private void Start ()
     {
         _rigidbody = GetComponent<Rigidbody>();
+
     }
-	
-	// Update is called once per frame
-	private void Update ()
+
+    // Update is called once per frame
+    private void Update ()
     {
 		if (photonView.isMine)
 		{
 			this.ProcessInputs();
-		}
-        
+		}        
 	}
 
-	private void ProcessInputs()
-	{
+    private void ProcessInputs()
+    {
         _dashTimer = Mathf.Min(_dashTimer + Time.unscaledDeltaTime, DashCooldown);
         _force = new Vector3(Input.GetAxis("Vertical"), 0, Input.GetAxis("Horizontal"));
         if (Input.GetKeyDown(KeyCode.Space) && CanDash)
@@ -78,16 +81,18 @@ public class PlayerControl : Photon.PunBehaviour
     private void Dash()
     {
         _dashTimer = 0;
-        _dash = true;
+        StartCoroutine(DashCoroutine());
     }
 
     private void FixedUpdate()
     {
         if (isGrounded)
         {
-            _rigidbody.AddForce(_force * MoveForce * (_dash ? DashForce : 1.0f), ForceMode.Force);
-            _dash = false;
-            _rigidbody.drag = GroundedDrag;
+            _rigidbody.AddForce(_force * MoveForce + (_dash ? DashForce * _force.normalized : Vector3.zero), ForceMode.Force);
+            if (!_dash)
+            {
+                _rigidbody.drag = GroundedDrag;
+            }
         }
         else
         {
@@ -95,12 +100,35 @@ public class PlayerControl : Photon.PunBehaviour
         }
     }
 
+    private IEnumerator DashCoroutine()
+    {
+        _dash = true;
+
+        Vector3 targetScale = 6 * Vector3.one;
+        Vector3 velocity = new Vector3();
+        float time = DashTime;
+        while (time > 0)
+        {
+            transform.localScale = Vector3.SmoothDamp(transform.localScale, targetScale, ref velocity, DashTime);
+            time -= Time.deltaTime;
+            yield return null;
+        }
+        transform.localScale = Vector3.one * 3;
+        _dash = false;
+    }
     private void OnTriggerEnter(Collider collider)
     {
-        Vector3 hitForce = (collider.transform.position - transform.position).normalized * _rigidbody.velocity.magnitude * HitForce;
+        
+        
+        
+        
         if (collider.CompareTag(gameObject.tag) && photonView.isMine)
         {
-            collider.gameObject.GetComponent<PlayerControl>().photonView.RPC("RpcTakeHit", PhotonTargets.All, gameObject.transform.position, hitForce);
+            Rigidbody otherBody = collider.GetComponent<Rigidbody>();
+            Vector3 direction = -(collider.transform.position - transform.position).normalized;
+            float factor = Mathf.Max(0, Vector3.Dot(otherBody.velocity, direction));
+            Vector3 hitForce = direction * factor * HitForce;// (_dash ?  : 1.0f);
+            RpcTakeHit(transform.position, hitForce);
         }
     }
 
@@ -119,7 +147,7 @@ public class PlayerControl : Photon.PunBehaviour
     {        
         if (photonView.isMine)
         {
-            _rigidbody.AddForceAtPosition(force, position, ForceMode.Acceleration);
+            _rigidbody.AddForceAtPosition(force, position, ForceMode.Force);
         }
     }
 

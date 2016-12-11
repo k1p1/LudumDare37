@@ -21,7 +21,8 @@ public class Spawner : MonoBehaviour
         do
         {
             hitGround = false;
-            spawnPosition = new Vector3(Random.Range(-transform.localScale.x, transform.localScale.x), Height, Random.Range(-transform.localScale.z, transform.localScale.z));
+            spawnPosition = new Vector3(Random.Range(-transform.localScale.x * 0.5f, transform.localScale.x * 0.5f), Height, Random.Range(-transform.localScale.z * 0.5f, transform.localScale.z * 0.5f));
+            spawnPosition += transform.position;
             if (Physics.Raycast(spawnPosition, Vector3.down, out hit) && hit.collider.CompareTag(GroundTag))
             {
                 hitGround = true;

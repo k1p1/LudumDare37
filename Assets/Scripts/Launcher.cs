@@ -14,8 +14,6 @@ public class Launcher : Photon.PunBehaviour
 	void Start ()
 	{
 		ui = GetComponent<LauncherUI>();
-        //todo get name from UI
-        PlayerPrefs.SetString(GameManager.NameKey, "Best Name Ever! ");
 
         PhotonNetwork.autoJoinLobby = false;
 		PhotonNetwork.automaticallySyncScene = true;
@@ -24,6 +22,11 @@ public class Launcher : Photon.PunBehaviour
 		{
 			return;
 		}
+	}
+
+	public void SetPlayerName(string name)
+	{
+		PlayerPrefs.SetString(GameManager.NameKey, name);
 	}
 
 	public override void OnConnectedToMaster()

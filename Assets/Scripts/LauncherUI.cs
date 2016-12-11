@@ -12,6 +12,14 @@ public class LauncherUI : MonoBehaviour
 	[SerializeField]
 	Text playButtonText;
 
+	[SerializeField]
+	GameObject inputPanel;
+
+	[SerializeField]
+	Text inputPanelText;
+
+	private Launcher launcher;
+
 	public bool PlayButtonInteractable
 	{
 		set { playButton.interactable = value; }
@@ -20,5 +28,16 @@ public class LauncherUI : MonoBehaviour
 	public string PlayButtonText
 	{
 		set { playButtonText.text = value; }
+	}
+
+	void Start()
+	{
+		launcher = GetComponent<Launcher>();
+		inputPanel.SetActive("default string" == PlayerPrefs.GetString(GameManager.NameKey, "default string"));
+	}
+
+	public void OnInputButtonPressed()
+	{
+		launcher.SetPlayerName(inputPanelText.text);
 	}
 }

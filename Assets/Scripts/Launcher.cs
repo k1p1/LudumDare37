@@ -11,7 +11,11 @@ public class Launcher : Photon.PunBehaviour
 
 	void Start ()
 	{
-		PhotonNetwork.autoJoinLobby = false;
+
+        //todo get name from UI
+        PlayerPrefs.SetString(GameManager.NameKey, "Best Name Ever! ");
+
+        PhotonNetwork.autoJoinLobby = false;
 		PhotonNetwork.automaticallySyncScene = true;
 
 		if (!PhotonNetwork.ConnectUsingSettings("v4.2"))

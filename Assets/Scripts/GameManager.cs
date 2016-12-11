@@ -7,6 +7,7 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : Photon.PunBehaviour
 {
+    static public string NameKey = "Name";
 	static public GameManager Instance;
 
 	[SerializeField]
@@ -29,7 +30,7 @@ public class GameManager : Photon.PunBehaviour
 		ui = GetComponent<GameUI>();
 	}
 
-	void Start () 
+    void Start () 
 	{
 		Instance = this;
 
@@ -42,7 +43,11 @@ public class GameManager : Photon.PunBehaviour
 
 		if (PlayerControl.LocalPlayerInstance==null)
 		{
-			Debug.Log("We are Instantiating LocalPlayer from "+SceneManagerHelper.ActiveSceneName);
+            var table = new ExitGames.Client.Photon.Hashtable();
+            table.Add(NameKey, PlayerPrefs.GetString(NameKey));
+            PhotonNetwork.player.SetCustomProperties(table);
+
+            Debug.Log("We are Instantiating LocalPlayer from "+SceneManagerHelper.ActiveSceneName);
 
 			// we're in a room. spawn a character for the local player. it gets synced by using PhotonNetwork.Instantiate
 			int localPlayerIndexPlayerInList = Array.IndexOf(PhotonNetwork.playerList, PhotonNetwork.player);
